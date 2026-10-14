@@ -96,13 +96,15 @@ function checklistHtml(title, slots) {
       .filter((slot) => slot.category === category)
       .map(
         (slot) =>
-          `<li><span class="box"></span><span class="what"><b>${escapeHtml(slot.setName)}</b> ${escapeHtml(numberLabel(slot))}${
+          `<li${slot.owned ? ' class="owned"' : ''}><span class="box">${slot.owned ? '✓' : ''}</span><span class="what"><b>${escapeHtml(slot.setName)}</b> ${escapeHtml(numberLabel(slot))}${
             slot.name === title ? '' : ` · ${escapeHtml(slot.name)}`
           }</span><span class="variant">${escapeHtml(badge(slot).text)}</span></li>`,
       );
-    return rows.length ? `<h2>${CATEGORY_TITLES[category]} (${rows.length})</h2><ul>${rows.join('')}</ul>` : '';
+    const owned = slots.filter((slot) => slot.category === category && slot.owned).length;
+    return rows.length ? `<h2>${CATEGORY_TITLES[category]} (${owned}/${rows.length})</h2><ul>${rows.join('')}</ul>` : '';
   });
-  return `<section class="checklist"><h1>${escapeHtml(title)} — master collection checklist (${slots.length})</h1>${groups.join('')}</section>`;
+  const owned = slots.filter((slot) => slot.owned).length;
+  return `<section class="checklist"><h1>${escapeHtml(title)} — master collection checklist (${owned}/${slots.length} owned)</h1>${groups.join('')}</section>`;
 }
 
 export function renderHtml({ title, slots, paper: paperName }) {
@@ -158,7 +160,8 @@ body { margin: 0; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; c
 .checklist h2 { font-size: 3.6mm; margin: 3mm 0 1.5mm; break-after: avoid; }
 .checklist ul { list-style: none; margin: 0; padding: 0; }
 .checklist li { display: flex; align-items: center; gap: 1.5mm; padding: 0.7mm 0; border-bottom: 0.1mm solid #ddd; break-inside: avoid; }
-.checklist .box { flex: none; width: 3mm; height: 3mm; border: 0.25mm solid #111; }
+.checklist .box { flex: none; display: flex; align-items: center; justify-content: center; width: 3mm; height: 3mm; border: 0.25mm solid #111; font-size: 2.6mm; font-weight: 700; line-height: 1; }
+.checklist .owned .what, .checklist .owned .variant { color: #888; }
 .checklist .what { flex: 1; }
 .checklist .variant { color: #555; text-align: right; }
 @media screen { body { background: #888; } .page, .checklist { margin: 8mm auto; background: #fff; } .checklist { width: ${paper.width}mm; padding: 14mm; } }

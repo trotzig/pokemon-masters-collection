@@ -100,6 +100,7 @@ export function expand(cards, config) {
         ...baseSlot(card),
         category,
         variant: VARIANT_LABELS[variant] ?? variant,
+        key: `${card.id}/${variant}`,
         order: Math.max(0, VARIANT_ORDER.indexOf(variant)),
         note: override.note,
         ...(override.image && { image: override.image }),
@@ -114,6 +115,7 @@ export function expand(cards, config) {
     slots.push({
       ...baseSlot(card),
       category: 'stamp',
+      key: `${card.id}/stamp:${stamp.stamp}`,
       variant: stamp.stamp,
       order: 100 + i,
       note: stamp.note,
@@ -126,6 +128,7 @@ export function expand(cards, config) {
     const from = extra.imageFrom ? baseSlot(requireCard(extra.imageFrom, `extras[${i}]`)) : {};
     slots.push({
       cardId: `extra-${i}`,
+      key: extra.id ?? `extra/${extra.set}/${extra.number}`,
       name: extra.name ?? from.name ?? config.name,
       number: String(extra.number ?? ''),
       setName: extra.set,

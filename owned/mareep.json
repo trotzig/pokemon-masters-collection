@@ -1,0 +1,12 @@
+{
+  "cards": [
+    { "card": "neo2-58", "variant": "unlimited" },
+    { "card": "xy11-38", "variant": "normal" },
+    { "card": "swsh3-55", "variant": "normal" },
+    { "card": "swsh6-47", "variant": "normal" },
+    { "card": "swsh12pt5gg-GG34", "variant": "holofoil" },
+    { "card": "sv1-66", "variant": "normal" },
+    { "card": "me4-27", "variant": "normal" },
+    { "card": "me4-27", "variant": "reverseHolofoil" }
+  ]
+}

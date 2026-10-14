@@ -32,6 +32,31 @@ async function printPdf(htmlFile, pdfFile) {
   return true;
 }
 
+/**
+ * Marks the slots listed in owned/<slug>.json. Each entry is
+ * { card, variant }: variant is a pokemontcg.io printing (normal,
+ * reverseHolofoil, holofoil, unlimited, 1stEdition, …), "stamp:<stamp name>"
+ * for a stamped card, or for extras just { card: <extra id> }.
+ */
+async function markOwned(slots, slug) {
+  const file = path.join(ROOT, 'owned', `${slug}.json`);
+  if (!existsSync(file)) return;
+  const { cards: owned = [] } = JSON.parse(await readFile(file, 'utf8'));
+  const byKey = new Map(slots.map((slot) => [slot.key, slot]));
+  for (const entry of owned) {
+    const key = entry.variant ? `${entry.card}/${entry.variant}` : entry.card;
+    const slot = byKey.get(key);
+    if (!slot) {
+      const options = slots.filter((s) => s.cardId === entry.card).map((s) => s.key.slice(entry.card.length + 1));
+      throw new Error(
+        `owned/${slug}.json: no placeholder for ${key}` +
+          (options.length ? ` (variants of ${entry.card}: ${options.join(', ')})` : ''),
+      );
+    }
+    slot.owned = true;
+  }
+}
+
 const { values: flags, positionals } = parseArgs({
   allowPositionals: true,
   options: {
@@ -54,6 +79,7 @@ if (!slug || !(flags.paper in PAPERS)) {
 const config = JSON.parse(await readFile(path.join(ROOT, 'collections', `${slug}.json`), 'utf8'));
 const cards = await loadCards(slug, config.query, { refresh: flags.refresh });
 const slots = expand(cards, config);
+await markOwned(slots, slug);
 
 const outDir = path.join(ROOT, 'output', slug);
 await mkdir(outDir, { recursive: true });
@@ -75,6 +101,7 @@ for (const category of CATEGORIES) {
   console.log(`${category.padEnd(7)} ${slots.filter((slot) => slot.category === category).length}`);
 }
 console.log(`total   ${slots.length} placeholders on ${Math.ceil(slots.length / 9)} sheets`);
+console.log(`owned   ${slots.filter((slot) => slot.owned).length}/${slots.length}`);
 console.log(`HTML    ${path.relative(ROOT, htmlFile)}`);
 
 if (!flags['no-pdf']) {

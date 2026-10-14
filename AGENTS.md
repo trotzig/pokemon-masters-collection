@@ -25,6 +25,12 @@ building and looking at the result. Rendering the HTML with headless Chrome
 
 - `collections/<slug>.json`: one file per Pokémon. This is the only
   hand-curated data.
+- `owned/<slug>.json`: the cards the user owns, as `{ card, variant }` entries
+  matching a slot's `key` (`<cardId>/<variant>`, `<cardId>/stamp:<name>`, or an
+  extra's id). Owned slots are ticked on the checklist. When the user says
+  they have a card, add it here. Modern cards have no "Unlimited" printing, so
+  "unlimited" from the user means `normal` there; only WOTC-era cards with a
+  1st Edition have an `unlimited` variant.
 - `src/lib/api.mjs`: pokemontcg.io search (`query`, usually
   `nationalPokedexNumbers:N`) and image download. Responses and images are
   cached in `cache/` (gitignored).

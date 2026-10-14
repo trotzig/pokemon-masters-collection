@@ -55,10 +55,32 @@ it off with `"cover": false`, or give the card a real Unlimited scan with `image
 Card ids are printed in the pokemontcg.io data (`cache/api/<name>.json`), e.g.
 `neo1-65`. Set `POKEMONTCG_API_KEY` if you hit the API rate limit.
 
+## Tracking owned cards
+
+List the cards you have in `owned/<name>.json`; they get a ✓ on the checklist
+page and the totals show how far along the collection is:
+
+```json
+{
+  "cards": [
+    { "card": "neo2-58", "variant": "unlimited" },
+    { "card": "me4-27", "variant": "reverseHolofoil" },
+    { "card": "svp-107", "variant": "stamp:Pikachu stamp #19" }
+  ]
+}
+```
+
+`variant` is the printing (`normal`, `reverseHolofoil`, `holofoil`,
+`unlimited`, `1stEdition`, …) or `stamp:<stamp name>` as written in the
+collection file. Extras are listed as `{ "card": "<extra id>" }`, where the id
+is the extra's `id` or `extra/<set>/<number>`. A typo fails the build and
+lists the valid variants for that card.
+
 ## Layout
 
 ```
 collections/   one JSON file per collection
+owned/         cards you own, per collection
 src/build.mjs  CLI: fetch → expand → render → PDF
 src/new.mjs    CLI: scaffold a collection
 src/lib/       api (fetch + cache), expand (cards → placeholders), render (HTML)
