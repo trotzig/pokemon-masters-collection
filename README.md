@@ -76,6 +76,20 @@ collection file. Extras are listed as `{ "card": "<extra id>" }`, where the id
 is the extra's `id` or `extra/<set>/<number>`. A typo fails the build and
 lists the valid variants for that card.
 
+Owned cards are also marked on the printed sheets with a green ✓.
+
+## Website
+
+```bash
+npm run site   # → output/site/index.html + one page per collection
+```
+
+A shareable page per collection: progress bar, every card (owned ones in
+colour with a ✓, missing ones greyed out) and a "Got it" / "Still need"
+filter. Card pictures are loaded from the pokemontcg.io image CDN, so no
+images are stored in the repo. `.github/workflows/pages.yml` rebuilds and
+publishes it to GitHub Pages on every push to `main`.
+
 ## Layout
 
 ```
@@ -83,5 +97,7 @@ collections/   one JSON file per collection
 owned/         cards you own, per collection
 src/build.mjs  CLI: fetch → expand → render → PDF
 src/new.mjs    CLI: scaffold a collection
-src/lib/       api (fetch + cache), expand (cards → placeholders), render (HTML)
+src/site.mjs   CLI: build the website
+src/lib/       api (fetch + cache), collection (config + owned → slots),
+               expand (cards → placeholders), render (print HTML), site (web HTML)
 ```

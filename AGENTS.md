@@ -13,6 +13,7 @@ npm run build -- mareep --paper letter  # US Letter
 npm run build -- mareep --refresh       # re-fetch card data (otherwise cached)
 npm run build -- mareep --no-pdf        # HTML only
 npm run new -- Pikachu                  # scaffold collections/pikachu.json
+npm run site                            # website → output/site/
 ```
 
 Plain Node (>=20, ESM, `.mjs`), **no dependencies**. Keep it that way unless
@@ -40,6 +41,12 @@ building and looking at the result. Rendering the HTML with headless Chrome
   `card.tcgplayer.prices`. Promo detection is a heuristic (`isPromo`).
 - `src/lib/render.mjs`: HTML with 3×3 cards at 63×88 mm per page, cut marks in
   the margins, a label overlay per card, and a checklist page at the end.
+- `src/lib/collection.mjs`: loads a collection's config, cards and owned list
+  into slots. It is shared by both outputs.
+- `src/lib/site.mjs` + `src/site.mjs`: the shareable website (index and one
+  page per collection). It hotlinks images from the CDN instead of using
+  `cache/`. `.github/workflows/pages.yml` deploys it to GitHub Pages on push
+  to `main`, so updating `owned/*.json` and pushing updates the public site.
 - `src/build.mjs`: the CLI that ties these together. Output goes to `output/`
   (gitignored).
 

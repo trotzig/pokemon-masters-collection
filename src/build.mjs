@@ -2,11 +2,12 @@
 // Usage: node src/build.mjs <collection> [--paper a4|letter] [--refresh] [--no-pdf]
 import { execFile } from 'node:child_process';
 import { existsSync } from 'node:fs';
-import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
+import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { parseArgs, promisify } from 'node:util';
-import { ROOT, loadCards, localImage } from './lib/api.mjs';
-import { CATEGORIES, expand } from './lib/expand.mjs';
+import { ROOT, localImage } from './lib/api.mjs';
+import { listCollections, loadCollection } from './lib/collection.mjs';
+import { CATEGORIES } from './lib/expand.mjs';
 import { PAPERS, renderHtml } from './lib/render.mjs';
 
 const CHROME_CANDIDATES = [
@@ -32,31 +33,6 @@ async function printPdf(htmlFile, pdfFile) {
   return true;
 }
 
-/**
- * Marks the slots listed in owned/<slug>.json. Each entry is
- * { card, variant }: variant is a pokemontcg.io printing (normal,
- * reverseHolofoil, holofoil, unlimited, 1stEdition, …), "stamp:<stamp name>"
- * for a stamped card, or for extras just { card: <extra id> }.
- */
-async function markOwned(slots, slug) {
-  const file = path.join(ROOT, 'owned', `${slug}.json`);
-  if (!existsSync(file)) return;
-  const { cards: owned = [] } = JSON.parse(await readFile(file, 'utf8'));
-  const byKey = new Map(slots.map((slot) => [slot.key, slot]));
-  for (const entry of owned) {
-    const key = entry.variant ? `${entry.card}/${entry.variant}` : entry.card;
-    const slot = byKey.get(key);
-    if (!slot) {
-      const options = slots.filter((s) => s.cardId === entry.card).map((s) => s.key.slice(entry.card.length + 1));
-      throw new Error(
-        `owned/${slug}.json: no placeholder for ${key}` +
-          (options.length ? ` (variants of ${entry.card}: ${options.join(', ')})` : ''),
-      );
-    }
-    slot.owned = true;
-  }
-}
-
 const { values: flags, positionals } = parseArgs({
   allowPositionals: true,
   options: {
@@ -68,18 +44,13 @@ const { values: flags, positionals } = parseArgs({
 
 const slug = positionals[0];
 if (!slug || !(flags.paper in PAPERS)) {
-  const available = (await readdir(path.join(ROOT, 'collections')))
-    .filter((file) => file.endsWith('.json'))
-    .map((file) => path.basename(file, '.json'));
+  const available = await listCollections();
   console.error('Usage: npm run build -- <collection> [--paper a4|letter] [--refresh] [--no-pdf]');
   console.error(`Collections: ${available.join(', ')}`);
   process.exit(1);
 }
 
-const config = JSON.parse(await readFile(path.join(ROOT, 'collections', `${slug}.json`), 'utf8'));
-const cards = await loadCards(slug, config.query, { refresh: flags.refresh });
-const slots = expand(cards, config);
-await markOwned(slots, slug);
+const { config, slots } = await loadCollection(slug, { refresh: flags.refresh });
 
 const outDir = path.join(ROOT, 'output', slug);
 await mkdir(outDir, { recursive: true });

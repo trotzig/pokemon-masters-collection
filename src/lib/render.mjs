@@ -11,24 +11,24 @@ const COLS = 3;
 const ROWS = 3;
 const MARK = { gap: 1, length: 3 }; // cut marks sit just outside the grid
 
-const CATEGORY_TITLES = { normal: 'Normal cards', promo: 'Promo cards', stamp: 'Stamped cards' };
+export const CATEGORY_TITLES = { normal: 'Normal cards', promo: 'Promo cards', stamp: 'Stamped cards' };
 
-const escapeHtml = (value) =>
+export const escapeHtml = (value) =>
   String(value ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 
 const chunk = (items, size) =>
   Array.from({ length: Math.ceil(items.length / size) }, (_, i) => items.slice(i * size, (i + 1) * size));
 
-const year = (slot) => (slot.releaseDate.startsWith('9999') ? '' : slot.releaseDate.slice(0, 4));
+export const year = (slot) => (slot.releaseDate.startsWith('9999') ? '' : slot.releaseDate.slice(0, 4));
 
-function numberLabel(slot) {
+export function numberLabel(slot) {
   if (!slot.number) return '';
   const total = slot.setTotal && /^\d+$/.test(slot.number) ? `/${slot.setTotal}` : '';
   return `#${slot.number}${total}`;
 }
 
 /** Badge text + colour class for a slot. */
-function badge(slot) {
+export function badge(slot) {
   if (slot.category === 'stamp') return { text: slot.variant, kind: 'stamp' };
   if (slot.category === 'promo') {
     return { text: slot.variant === 'Normal' ? 'Promo' : `Promo · ${slot.variant}`, kind: 'promo' };
@@ -60,33 +60,41 @@ function cutMarks(paper, left, top) {
 /**
  * Hides part of a card picture (e.g. a 1st Edition stamp) by laying a copy of
  * the picture on top, shifted so that plain card texture shows through.
+ * Percentages, so it works at any card size.
  */
-function coverHtml(slot) {
+export function coverHtml(slot, src = slot.imageSrc) {
+  const pct = (n) => `${+(n * 100).toFixed(3)}%`;
   return (slot.cover ?? [])
     .map(({ x, y, w, h, dx = 0, dy = 0 }) => {
       const style = [
-        `left:${x * CARD.width}mm`,
-        `top:${y * CARD.height}mm`,
-        `width:${w * CARD.width}mm`,
-        `height:${h * CARD.height}mm`,
-        `background-image:url("${escapeHtml(slot.imageSrc)}")`,
-        `background-position:${-(x + dx) * CARD.width}mm ${-(y + dy) * CARD.height}mm`,
+        `left:${pct(x)}`,
+        `top:${pct(y)}`,
+        `width:${pct(w)}`,
+        `height:${pct(h)}`,
+        `background-image:url("${escapeHtml(src)}")`,
+        `background-size:${pct(1 / w)} ${pct(1 / h)}`,
+        `background-position:${pct((x + dx) / (1 - w))} ${pct((y + dy) / (1 - h))}`,
       ].join(';');
       return `<div class="cover" style='${style}'></div>`;
     })
     .join('');
 }
 
+/** Feathered edges for `.cover` overlays. */
+export const COVER_CSS = `.cover { position: absolute; background-repeat: no-repeat;
+  mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent), linear-gradient(to bottom, transparent, #000 12%, #000 88%, transparent);
+  mask-composite: intersect; }`;
+
 function slotHtml(slot) {
   const { text, kind } = badge(slot);
   const meta = [numberLabel(slot), year(slot), slot.note].filter(Boolean).join(' · ');
-  return `<div class="slot">
+  return `<div class="slot${slot.owned ? ' owned' : ''}">
   ${slot.imageSrc ? `<img class="art" src="${escapeHtml(slot.imageSrc)}" alt="">${coverHtml(slot)}` : `<div class="art missing">${escapeHtml(slot.name)}</div>`}
   <div class="label">
     <div class="set">${slot.symbolSrc ? `<img src="${escapeHtml(slot.symbolSrc)}" alt="">` : ''}<span>${escapeHtml(slot.setName)}</span></div>
     <div class="meta">${escapeHtml(meta)}</div>
-    <div class="badge ${kind}">${escapeHtml(text)}</div>
-  </div>
+    <div class="badge ${kind}">${escapeHtml(text)}</div>${slot.owned ? '<div class="badge have">✓ Got it</div>' : ''}
+  </div>${slot.owned ? '<div class="check">✓</div>' : ''}
 </div>`;
 }
 
@@ -142,9 +150,7 @@ body { margin: 0; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; c
 .grid { position: absolute; left: ${left}mm; top: ${top}mm; display: grid; grid-template-columns: repeat(${COLS}, ${CARD.width}mm); grid-auto-rows: ${CARD.height}mm; }
 .slot { position: relative; width: ${CARD.width}mm; height: ${CARD.height}mm; outline: 0.1mm solid #bbb; overflow: hidden; }
 .art { display: block; width: 100%; height: 100%; }
-.cover { position: absolute; background-size: ${CARD.width}mm ${CARD.height}mm; background-repeat: no-repeat;
-  mask-image: linear-gradient(to right, transparent, #000 0.6mm, #000 calc(100% - 0.6mm), transparent), linear-gradient(to bottom, transparent, #000 0.6mm, #000 calc(100% - 0.6mm), transparent);
-  mask-composite: intersect; }
+${COVER_CSS}
 .art.missing { display: flex; align-items: center; justify-content: center; background: #eee; color: #888; font-size: 5mm; }
 .label { position: absolute; left: 2.5mm; right: 2.5mm; bottom: 2.5mm; padding: 1.2mm 1.6mm; background: rgba(255, 255, 255, 0.94); border: 0.2mm solid #222; border-radius: 1.5mm; }
 .set { display: flex; align-items: center; gap: 1mm; font-size: 3mm; font-weight: 700; line-height: 1.15; }
@@ -155,6 +161,8 @@ body { margin: 0; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; c
 .badge.first { background: #111; }
 .badge.promo { background: #b7791f; }
 .badge.stamp { background: #c0262d; }
+.badge.have { margin-left: 1mm; background: #1f8a3b; }
+.check { position: absolute; top: 9mm; right: 3mm; width: 11mm; height: 11mm; border-radius: 50%; background: #1f8a3b; border: 0.6mm solid #fff; color: #fff; font-size: 7mm; font-weight: 700; line-height: 9.6mm; text-align: center; box-shadow: 0 0 0 0.2mm #0005; }
 .checklist { page: checklist; columns: 2; column-gap: 8mm; font-size: 2.9mm; }
 .checklist h1 { column-span: all; font-size: 5mm; margin: 0 0 4mm; }
 .checklist h2 { font-size: 3.6mm; margin: 3mm 0 1.5mm; break-after: avoid; }
