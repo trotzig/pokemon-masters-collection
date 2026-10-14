@@ -1,0 +1,20 @@
+{
+  "name": "Mareep",
+  "query": "nationalPokedexNumbers:179",
+  "options": { "reverseHolo": true, "firstEdition": true },
+  "exclude": [],
+  "overrides": {
+    "me4-27": { "variants": ["normal", "reverseHolofoil"] }
+  },
+  "stamps": [
+    { "card": "hgss1-73", "stamp": "Gold Snowflake stamp", "note": "2010 Surprise Calendar (German)" },
+    { "card": "sm8-75", "stamp": "Toys R Us stamp", "note": "Reverse holo" },
+    { "card": "svp-107", "stamp": "Pikachu stamp #19", "note": "Battle Academy 2024" },
+    { "card": "svp-107", "stamp": "Pikachu stamp #41", "note": "Battle Academy 2024" },
+    { "card": "svp-107", "stamp": "Pikachu stamp #45", "note": "Battle Academy 2024" }
+  ],
+  "extras": [
+    { "set": "HS Trainer Kit (Raichu)", "number": 13, "setTotal": 30, "releaseDate": "2010/05/01", "imageFrom": "hgss1-73", "category": "promo", "variant": "Normal" },
+    { "set": "HS Trainer Kit (Raichu)", "number": 20, "setTotal": 30, "releaseDate": "2010/05/01", "imageFrom": "hgss1-73", "category": "promo", "variant": "Normal" }
+  ]
+}
