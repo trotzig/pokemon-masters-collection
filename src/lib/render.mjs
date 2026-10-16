@@ -7,8 +7,8 @@ export const PAPERS = {
 };
 
 const CARD = { width: 63, height: 88 }; // standard trading card
-const COLS = 3;
-const ROWS = 3;
+export const COLS = 3;
+export const ROWS = 3;
 const MARK = { gap: 1, length: 3 }; // cut marks sit just outside the grid
 
 export const CATEGORY_TITLES = { normal: 'Normal cards', promo: 'Promo cards', stamp: 'Stamped cards' };
@@ -16,7 +16,7 @@ export const CATEGORY_TITLES = { normal: 'Normal cards', promo: 'Promo cards', s
 export const escapeHtml = (value) =>
   String(value ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 
-const chunk = (items, size) =>
+export const chunk = (items, size) =>
   Array.from({ length: Math.ceil(items.length / size) }, (_, i) => items.slice(i * size, (i + 1) * size));
 
 export const year = (slot) => (slot.releaseDate.startsWith('9999') ? '' : slot.releaseDate.slice(0, 4));

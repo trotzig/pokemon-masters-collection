@@ -1,7 +1,7 @@
 // Web pages for sharing collections: one page per collection plus an index.
 // Pictures are loaded straight from the card image CDN, never committed.
 import { CATEGORIES } from './expand.mjs';
-import { CATEGORY_TITLES, COVER_CSS, badge, coverHtml, escapeHtml, numberLabel, year } from './render.mjs';
+import { CATEGORY_TITLES, COLS, COVER_CSS, ROWS, badge, chunk, coverHtml, escapeHtml, numberLabel, year } from './render.mjs';
 
 const progress = (slots) => {
   const owned = slots.filter((slot) => slot.owned).length;
@@ -29,22 +29,27 @@ h1 { margin: 0; font-size: clamp(28px, 5vw, 44px); line-height: 1.1; }
 .filters { position: sticky; top: 0; z-index: 2; display: flex; gap: 8px; margin: 24px -16px 0; padding: 12px 16px; background: var(--bg); border-bottom: 1px solid var(--line); }
 .filters button { font: inherit; font-size: 14px; padding: 6px 14px; border-radius: 99px; border: 1px solid var(--line); background: var(--surface); color: var(--text); cursor: pointer; }
 .filters button[aria-pressed="true"] { background: var(--text); color: var(--bg); border-color: var(--text); }
-h2 { margin: 32px 0 14px; font-size: 20px; }
-h2 small { color: var(--muted); font-weight: 400; font-size: 15px; }
-.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 18px; }
+.binder { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 480px), 1fr)); gap: 28px 20px; margin-top: 24px; }
+.page { padding: 14px; border-radius: 14px; background: var(--surface); border: 1px solid var(--line); }
+.page h2 { margin: 0 0 12px; font-size: 14px; font-weight: 600; color: var(--muted); }
+.page h2 small { font-weight: 400; }
+.grid { display: grid; grid-template-columns: repeat(${COLS}, minmax(0, 1fr)); gap: 12px; }
 .card { margin: 0; }
 .pic { position: relative; aspect-ratio: 63 / 88; border-radius: 4.5% / 3.2%; overflow: hidden; background: var(--line); }
 .pic img { display: block; width: 100%; height: 100%; object-fit: cover; }
 .card:not(.owned) .pic { filter: grayscale(1); opacity: 0.45; }
 .check { position: absolute; top: 6px; right: 6px; width: 30px; height: 30px; border-radius: 50%; background: var(--good); color: #fff; border: 2px solid #fff; display: grid; place-items: center; font-weight: 700; box-shadow: 0 1px 3px #0006; }
-figcaption { padding-top: 8px; font-size: 13px; line-height: 1.3; }
-figcaption b { display: block; font-size: 14px; }
+figcaption { padding-top: 6px; font-size: 12px; line-height: 1.3; overflow-wrap: anywhere; }
+figcaption b { display: block; font-size: 13px; }
 figcaption .meta { color: var(--muted); }
 .badge { display: inline-block; margin-top: 5px; padding: 1px 8px; border-radius: 99px; font-size: 12px; font-weight: 600; color: #fff; background: var(--plain); }
 .badge.reverse { background: var(--reverse); } .badge.first { background: var(--first); }
 .badge.promo { background: var(--promo); } .badge.stamp { background: var(--stamp); }
-body[data-filter="have"] .card:not(.owned), body[data-filter="need"] .card.owned { display: none; }
-body[data-filter="have"] section:not(:has(.card.owned)), body[data-filter="need"] section:not(:has(.card:not(.owned))) { display: none; }
+/* Filtered-out cards leave their binder slot empty so positions match the real binder. */
+body[data-filter="have"] .card:not(.owned) :is(.pic > *, figcaption), body[data-filter="need"] .card.owned :is(.pic > *, figcaption) { visibility: hidden; }
+body[data-filter="have"] .card:not(.owned) .pic, body[data-filter="need"] .card.owned .pic { background: none; border: 2px dashed var(--line); filter: none; opacity: 1; }
+body[data-filter="have"] .page:not(:has(.card.owned)), body[data-filter="need"] .page:not(:has(.card:not(.owned))) { display: none; }
+@media (max-width: 520px) { .page { padding: 10px; } .grid { gap: 8px; } figcaption { font-size: 11px; } figcaption b { font-size: 12px; } .badge { font-size: 11px; padding: 1px 6px; } }
 
 .collections { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 18px; margin-top: 28px; }
 .collection { display: flex; gap: 14px; align-items: center; padding: 14px; border-radius: 14px; background: var(--surface); border: 1px solid var(--line); text-decoration: none; }
@@ -84,13 +89,22 @@ function cardHtml(slot) {
 
 export function renderCollectionPage({ config, slots }) {
   const { owned, total, percent } = progress(slots);
-  const sections = CATEGORIES.map((category) => {
+  // Same 3×3 pages, in the same order, as the printed placeholder sheets.
+  const pages = chunk(slots, COLS * ROWS);
+  const binder = pages
+    .map((pageSlots, i) => {
+      const sections = [...new Set(pageSlots.map((slot) => CATEGORY_TITLES[slot.category]))].join(' + ');
+      const p = progress(pageSlots);
+      return `<section class="page"><h2>Page ${i + 1} · ${escapeHtml(sections)} <small>${p.owned}/${p.total}</small></h2>
+<div class="grid">${pageSlots.map(cardHtml).join('\n')}</div></section>`;
+    })
+    .join('\n');
+  const categoryStats = CATEGORIES.map((category) => {
     const group = slots.filter((slot) => slot.category === category);
     if (!group.length) return '';
     const p = progress(group);
-    return `<section><h2>${CATEGORY_TITLES[category]} <small>${p.owned}/${p.total}</small></h2>
-<div class="grid">${group.map(cardHtml).join('\n')}</div></section>`;
-  }).join('\n');
+    return `<span>${CATEGORY_TITLES[category]} <b>${p.owned}</b>/${p.total}</span>`;
+  }).join('');
 
   return page(
     `${config.name} master collection`,
@@ -99,14 +113,14 @@ export function renderCollectionPage({ config, slots }) {
   <h1>${escapeHtml(config.name)} master collection</h1>
   <p class="sub">Every English ${escapeHtml(config.name)} card: normal, promo and stamped versions.</p>
   <div class="bar" role="progressbar" aria-valuenow="${owned}" aria-valuemin="0" aria-valuemax="${total}"><span style="width:${percent}%"></span></div>
-  <div class="stats"><span><b>${owned}</b> of <b>${total}</b> collected (${percent}%)</span><span><b>${total - owned}</b> still to find</span></div>
+  <div class="stats"><span><b>${owned}</b> of <b>${total}</b> collected (${percent}%)</span><span><b>${total - owned}</b> still to find</span>${categoryStats}</div>
 </header>
 <nav class="filters" aria-label="Filter">
   <button type="button" data-filter="" aria-pressed="true">All</button>
   <button type="button" data-filter="have" aria-pressed="false">Got it</button>
   <button type="button" data-filter="need" aria-pressed="false">Still need</button>
 </nav>
-${sections}
+<div class="binder">${binder}</div>
 <script>
 for (const button of document.querySelectorAll('.filters button')) {
   button.addEventListener('click', () => {

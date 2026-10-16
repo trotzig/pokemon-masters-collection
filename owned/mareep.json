@@ -1,11 +1,18 @@
 {
   "cards": [
     { "card": "neo2-58", "variant": "unlimited" },
+    { "card": "ex3-64", "variant": "normal" },
+    { "card": "ex7-67", "variant": "normal" },
+    { "card": "ex10-62", "variant": "normal" },
+    { "card": "dp3-94", "variant": "normal" },
+    { "card": "hgss1-73", "variant": "normal" },
+    { "card": "col1-63", "variant": "normal" },
     { "card": "xy11-38", "variant": "normal" },
     { "card": "swsh3-55", "variant": "normal" },
     { "card": "swsh6-47", "variant": "normal" },
     { "card": "swsh12pt5gg-GG34", "variant": "holofoil" },
     { "card": "sv1-66", "variant": "normal" },
+    { "card": "sv10-72", "variant": "reverseHolofoil" },
     { "card": "me4-27", "variant": "normal" },
     { "card": "me4-27", "variant": "reverseHolofoil" }
   ]
