@@ -41,6 +41,15 @@ function apiVariants(card) {
   return keys.length ? keys : ['normal'];
 }
 
+/**
+ * Estimated value in USD of one printing: TCGplayer's market price, or the
+ * mid price when there have been no recent sales.
+ */
+function apiPrice(card, variant) {
+  const prices = card.tcgplayer?.prices?.[variant];
+  return prices?.market ?? prices?.mid ?? undefined;
+}
+
 function baseSlot(card) {
   return {
     cardId: card.id,
@@ -103,6 +112,7 @@ export function expand(cards, config) {
         key: `${card.id}/${variant}`,
         order: Math.max(0, VARIANT_ORDER.indexOf(variant)),
         note: override.note,
+        price: override.prices?.[variant] ?? apiPrice(card, variant),
         ...(override.image && { image: override.image }),
         ...(cover && { cover: [cover].flat() }),
       });
@@ -119,6 +129,7 @@ export function expand(cards, config) {
       variant: stamp.stamp,
       order: 100 + i,
       note: stamp.note,
+      price: stamp.price,
       ...(stamp.image && { image: stamp.image }),
     });
   }
@@ -140,6 +151,7 @@ export function expand(cards, config) {
       variant: extra.variant ?? 'Normal',
       order: 0,
       note: extra.note,
+      price: extra.price,
     });
   }
 

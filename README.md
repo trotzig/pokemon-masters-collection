@@ -38,9 +38,9 @@ not know about stamped cards, so those are listed by hand in the collection file
 | `query` | pokemontcg.io search query, e.g. `nationalPokedexNumbers:179` |
 | `options` | `reverseHolo` / `firstEdition`: set to `false` to leave those printings out. `firstEditionStamp`: where the 1st Edition stamp sits (see below), or `false` |
 | `exclude` | Card ids to skip |
-| `overrides` | Per card id: `category` (`normal`, `promo`, `stamp`), `variants` (`normal`, `holofoil`, `reverseHolofoil`, `unlimited`, `1stEdition`, …), `image`, `note`, `cover` |
-| `stamps` | Stamped versions of a card in the results: `{ card, stamp, note?, image? }` |
-| `extras` | Cards missing from the API: `{ set, number, setTotal?, releaseDate?, category?, variant?, note?, image? \| imageFrom? }` |
+| `overrides` | Per card id: `category` (`normal`, `promo`, `stamp`), `variants` (`normal`, `holofoil`, `reverseHolofoil`, `unlimited`, `1stEdition`, …), `image`, `note`, `cover`, `prices` (estimated USD value per variant, e.g. `{ "normal": 0.25 }`) |
+| `stamps` | Stamped versions of a card in the results: `{ card, stamp, note?, image?, price? }` |
+| `extras` | Cards missing from the API: `{ set, number, setTotal?, releaseDate?, category?, variant?, note?, price?, image? \| imageFrom? }` |
 
 `image` is a URL or a path relative to the repo root; `imageFrom` borrows the
 picture of another card id. Stamped cards use the picture of the unstamped card
@@ -86,7 +86,11 @@ npm run site   # → output/site/index.html + one page per collection
 
 A shareable page per collection: progress bar, every card (owned ones in
 colour with a ✓, missing ones greyed out) and a "Got it" / "Still need"
-filter. Card pictures are loaded from the pokemontcg.io image CDN, so no
+filter. Each card shows an estimated value: TCGplayer's market price from
+pokemontcg.io, or the `price` / `prices` given in the collection file for
+stamped cards, extras and cards without price data. The cards can be sorted by
+price, release date or set name, and "Clear sorting" goes back to binder order.
+Card pictures are loaded from the pokemontcg.io image CDN, so no
 images are stored in the repo. `.github/workflows/pages.yml` rebuilds and
 publishes it to GitHub Pages on every push to `main`.
 

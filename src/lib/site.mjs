@@ -8,6 +8,10 @@ const progress = (slots) => {
   return { owned, total: slots.length, percent: slots.length ? Math.round((owned / slots.length) * 100) : 0 };
 };
 
+const usd = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
+const formatPrice = (price) => (price == null ? '' : usd.format(price));
+const sumPrices = (slots) => slots.reduce((sum, slot) => sum + (slot.price ?? 0), 0);
+
 const STYLE = `
 :root {
   --bg: #fbf7ec; --surface: #ffffff; --text: #1d1b16; --muted: #6b6455; --line: #e7dfcc;
@@ -26,9 +30,12 @@ h1 { margin: 0; font-size: clamp(28px, 5vw, 44px); line-height: 1.1; }
 .bar span { display: block; height: 100%; background: linear-gradient(90deg, var(--accent), #f7d24a); border-radius: 99px; }
 .stats { display: flex; flex-wrap: wrap; gap: 8px 20px; margin-top: 10px; color: var(--muted); font-size: 14px; }
 .stats b { color: var(--text); }
-.filters { position: sticky; top: 0; z-index: 2; display: flex; gap: 8px; margin: 24px -16px 0; padding: 12px 16px; background: var(--bg); border-bottom: 1px solid var(--line); }
+.filters { position: sticky; top: 0; z-index: 2; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 24px -16px 0; padding: 12px 16px; background: var(--bg); border-bottom: 1px solid var(--line); }
 .filters button { font: inherit; font-size: 14px; padding: 6px 14px; border-radius: 99px; border: 1px solid var(--line); background: var(--surface); color: var(--text); cursor: pointer; }
 .filters button[aria-pressed="true"] { background: var(--text); color: var(--bg); border-color: var(--text); }
+.filters button:disabled { opacity: 0.4; cursor: default; }
+.sort { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-left: auto; font-size: 14px; color: var(--muted); }
+.sort select { font: inherit; font-size: 14px; padding: 6px 10px; border-radius: 99px; border: 1px solid var(--line); background: var(--surface); color: var(--text); }
 .binder { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 480px), 1fr)); gap: 28px 20px; margin-top: 24px; }
 .page { padding: 14px; border-radius: 14px; background: var(--surface); border: 1px solid var(--line); }
 .page h2 { margin: 0 0 12px; font-size: 14px; font-weight: 600; color: var(--muted); }
@@ -45,11 +52,17 @@ figcaption .meta { color: var(--muted); }
 .badge { display: inline-block; margin-top: 5px; padding: 1px 8px; border-radius: 99px; font-size: 12px; font-weight: 600; color: #fff; background: var(--plain); }
 .badge.reverse { background: var(--reverse); } .badge.first { background: var(--first); }
 .badge.promo { background: var(--promo); } .badge.stamp { background: var(--stamp); }
+.price { display: inline-block; margin: 5px 0 0 6px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.price.none { font-weight: 400; color: var(--muted); }
+/* Sorted cards are shown in one grid instead of binder pages. */
+.sorted { margin-top: 24px; padding: 14px; border-radius: 14px; background: var(--surface); border: 1px solid var(--line); grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+.binder[hidden], .sorted[hidden] { display: none; }
+body[data-filter="have"] .sorted .card:not(.owned), body[data-filter="need"] .sorted .card.owned { display: none; }
 /* Filtered-out cards leave their binder slot empty so positions match the real binder. */
 body[data-filter="have"] .card:not(.owned) :is(.pic > *, figcaption), body[data-filter="need"] .card.owned :is(.pic > *, figcaption) { visibility: hidden; }
 body[data-filter="have"] .card:not(.owned) .pic, body[data-filter="need"] .card.owned .pic { background: none; border: 2px dashed var(--line); filter: none; opacity: 1; }
 body[data-filter="have"] .page:not(:has(.card.owned)), body[data-filter="need"] .page:not(:has(.card:not(.owned))) { display: none; }
-@media (max-width: 520px) { .page { padding: 10px; } .grid { gap: 8px; } figcaption { font-size: 11px; } figcaption b { font-size: 12px; } .badge { font-size: 11px; padding: 1px 6px; } }
+@media (max-width: 520px) { .sort { margin-left: 0; } .sorted { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); } .page { padding: 10px; } .grid { gap: 8px; } figcaption { font-size: 11px; } figcaption b { font-size: 12px; } .badge { font-size: 11px; padding: 1px 6px; } }
 
 .collections { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 18px; margin-top: 28px; }
 .collection { display: flex; gap: 14px; align-items: center; padding: 14px; border-radius: 14px; background: var(--surface); border: 1px solid var(--line); text-decoration: none; }
@@ -76,27 +89,39 @@ ${body}
 </html>
 `;
 
-function cardHtml(slot) {
+function cardHtml(slot, index) {
   const { text, kind } = badge(slot);
   const meta = [numberLabel(slot), year(slot), slot.note].filter(Boolean).join(' · ');
-  return `<figure class="card${slot.owned ? ' owned' : ''}">
+  const price =
+    slot.price == null
+      ? '<span class="price none">No price</span>'
+      : `<span class="price" title="Estimated value (TCGplayer market price)">${formatPrice(slot.price)}</span>`;
+  const data = { index, price: slot.price ?? '', date: slot.releaseDate, set: slot.setName };
+  const attrs = Object.entries(data)
+    .map(([name, value]) => ` data-${name}="${escapeHtml(String(value))}"`)
+    .join('');
+  return `<figure class="card${slot.owned ? ' owned' : ''}"${attrs}>
   <div class="pic">${
     slot.image ? `<img src="${escapeHtml(slot.image)}" alt="${escapeHtml(`${slot.name}, ${slot.setName} ${numberLabel(slot)}`)}" loading="lazy">${coverHtml(slot, slot.image)}` : ''
   }${slot.owned ? '<span class="check" title="Got it">✓</span>' : ''}</div>
-  <figcaption><b>${escapeHtml(slot.setName)}</b><span class="meta">${escapeHtml(meta)}</span><br><span class="badge ${kind}">${escapeHtml(text)}</span></figcaption>
+  <figcaption><b>${escapeHtml(slot.setName)}</b><span class="meta">${escapeHtml(meta)}</span><br><span class="badge ${kind}">${escapeHtml(text)}</span>${price}</figcaption>
 </figure>`;
 }
 
 export function renderCollectionPage({ config, slots }) {
   const { owned, total, percent } = progress(slots);
   // Same 3×3 pages, in the same order, as the printed placeholder sheets.
-  const pages = chunk(slots, COLS * ROWS);
+  const pages = chunk(
+    slots.map((slot, index) => ({ slot, index })),
+    COLS * ROWS,
+  );
   const binder = pages
-    .map((pageSlots, i) => {
+    .map((entries, i) => {
+      const pageSlots = entries.map(({ slot }) => slot);
       const sections = [...new Set(pageSlots.map((slot) => CATEGORY_TITLES[slot.category]))].join(' + ');
       const p = progress(pageSlots);
       return `<section class="page"><h2>Page ${i + 1} · ${escapeHtml(sections)} <small>${p.owned}/${p.total}</small></h2>
-<div class="grid">${pageSlots.map(cardHtml).join('\n')}</div></section>`;
+<div class="grid">${entries.map(({ slot, index }) => cardHtml(slot, index)).join('\n')}</div></section>`;
     })
     .join('\n');
   const categoryStats = CATEGORIES.map((category) => {
@@ -105,6 +130,10 @@ export function renderCollectionPage({ config, slots }) {
     const p = progress(group);
     return `<span>${CATEGORY_TITLES[category]} <b>${p.owned}</b>/${p.total}</span>`;
   }).join('');
+  const priced = slots.filter((slot) => slot.price != null).length;
+  const valueStats = `<span title="Estimated from TCGplayer market prices; ${priced} of ${total} cards have a price">Value <b>${formatPrice(
+    sumPrices(slots.filter((slot) => slot.owned)),
+  )}</b> of ${formatPrice(sumPrices(slots))}</span>`;
 
   return page(
     `${config.name} master collection`,
@@ -113,20 +142,68 @@ export function renderCollectionPage({ config, slots }) {
   <h1>${escapeHtml(config.name)} master collection</h1>
   <p class="sub">Every English ${escapeHtml(config.name)} card: normal, promo and stamped versions.</p>
   <div class="bar" role="progressbar" aria-valuenow="${owned}" aria-valuemin="0" aria-valuemax="${total}"><span style="width:${percent}%"></span></div>
-  <div class="stats"><span><b>${owned}</b> of <b>${total}</b> collected (${percent}%)</span><span><b>${total - owned}</b> still to find</span>${categoryStats}</div>
+  <div class="stats"><span><b>${owned}</b> of <b>${total}</b> collected (${percent}%)</span><span><b>${total - owned}</b> still to find</span>${categoryStats}${valueStats}</div>
 </header>
 <nav class="filters" aria-label="Filter">
   <button type="button" data-filter="" aria-pressed="true">All</button>
   <button type="button" data-filter="have" aria-pressed="false">Got it</button>
   <button type="button" data-filter="need" aria-pressed="false">Still need</button>
+  <div class="sort">
+    <label for="sort">Sort</label>
+    <select id="sort">
+      <option value="">Binder order</option>
+      <option value="price-desc">Price: high to low</option>
+      <option value="price-asc">Price: low to high</option>
+      <option value="date-desc">Newest first</option>
+      <option value="date-asc">Oldest first</option>
+      <option value="set-asc">Set name A–Z</option>
+    </select>
+    <button type="button" id="clear-sort" disabled>Clear sorting</button>
+  </div>
 </nav>
 <div class="binder">${binder}</div>
+<div class="sorted grid" hidden></div>
 <script>
-for (const button of document.querySelectorAll('.filters button')) {
+const cards = [...document.querySelectorAll('.binder .card')];
+const homes = cards.map((card) => card.parentElement);
+const binder = document.querySelector('.binder');
+const sorted = document.querySelector('.sorted');
+const select = document.getElementById('sort');
+const clear = document.getElementById('clear-sort');
+const num = (card, key) => (card.dataset[key] === '' ? null : Number(card.dataset[key]));
+const byIndex = (a, b) => num(a, 'index') - num(b, 'index');
+// Cards without a price go last whichever way prices are sorted.
+const byPrice = (dir) => (a, b) => {
+  const pa = num(a, 'price'), pb = num(b, 'price');
+  if (pa == null || pb == null) return (pa == null) - (pb == null) || byIndex(a, b);
+  return dir * (pa - pb) || byIndex(a, b);
+};
+const SORTS = {
+  'price-desc': byPrice(-1),
+  'price-asc': byPrice(1),
+  'date-desc': (a, b) => b.dataset.date.localeCompare(a.dataset.date) || byIndex(a, b),
+  'date-asc': (a, b) => a.dataset.date.localeCompare(b.dataset.date) || byIndex(a, b),
+  'set-asc': (a, b) => a.dataset.set.localeCompare(b.dataset.set) || byIndex(a, b),
+};
+function applySort(key) {
+  select.value = key;
+  clear.disabled = !key;
+  if (key) {
+    sorted.append(...[...cards].sort(SORTS[key]));
+  } else {
+    // Back to the binder pages, in the original order.
+    cards.forEach((card, i) => homes[i].append(card));
+  }
+  binder.hidden = Boolean(key);
+  sorted.hidden = !key;
+}
+select.addEventListener('change', () => applySort(select.value));
+clear.addEventListener('click', () => applySort(''));
+for (const button of document.querySelectorAll('.filters button[data-filter]')) {
   button.addEventListener('click', () => {
     if (button.dataset.filter) document.body.dataset.filter = button.dataset.filter;
     else delete document.body.dataset.filter;
-    for (const b of document.querySelectorAll('.filters button')) b.setAttribute('aria-pressed', String(b === button));
+    for (const b of document.querySelectorAll('.filters button[data-filter]')) b.setAttribute('aria-pressed', String(b === button));
   });
 }
 </script>`,

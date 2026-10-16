@@ -64,6 +64,10 @@ building and looking at the result. Rendering the HTML with headless Chrome
 - WOTC-era scans are of the 1st Edition printing. The Unlimited slot covers
   the stamp with a CSS overlay that copies card texture from just below it
   (`FIRST_EDITION_STAMP` in `expand.mjs`, `coverHtml` in `render.mjs`).
+- Prices are estimates in USD: TCGplayer market (or mid) price per variant
+  from pokemontcg.io. Stamps and extras have no API price, so they take a
+  hand-researched `price`; `overrides.<id>.prices` sets one per variant. The
+  site re-fetches card data on each deploy, so API prices stay current.
 - Only English cards are included. Japanese prints and TCG Pocket cards are
   out of scope.
 - Card images are copyrighted. Never commit `cache/` or `output/`.
