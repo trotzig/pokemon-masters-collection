@@ -12,9 +12,9 @@
   "exclude": [],
   "overrides": {
     "svp-44": { "category": "normal" },
-    "me4-87": { "variants": ["holofoil"] },
-    "me4-89": { "variants": ["holofoil"] },
-    "me55-146": { "variants": ["holofoil"] }
+    "me4-87": { "variants": ["holofoil"], "prices": { "holofoil": 4.86 } },
+    "me4-89": { "variants": ["holofoil"], "prices": { "holofoil": 4.35 } },
+    "me55-146": { "variants": ["holofoil"], "prices": { "holofoil": 10.51 } }
   },
   "stamps": [],
   "extras": []
