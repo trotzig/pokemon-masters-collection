@@ -6,7 +6,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { parseArgs, promisify } from 'node:util';
 import { ROOT, localImage } from './lib/api.mjs';
-import { listCollections, loadCollection } from './lib/collection.mjs';
+import { collectionTitle, listCollections, loadCollection } from './lib/collection.mjs';
 import { CATEGORIES } from './lib/expand.mjs';
 import { PAPERS, renderHtml } from './lib/render.mjs';
 
@@ -66,7 +66,7 @@ for (const slot of slots) {
 }
 
 const htmlFile = path.join(outDir, `${slug}-${flags.paper}.html`);
-await writeFile(htmlFile, renderHtml({ title: config.name, slots, paper: flags.paper }));
+await writeFile(htmlFile, renderHtml({ title: collectionTitle(config), name: config.name, slots, paper: flags.paper }));
 
 for (const category of CATEGORIES) {
   console.log(`${category.padEnd(7)} ${slots.filter((slot) => slot.category === category).length}`);

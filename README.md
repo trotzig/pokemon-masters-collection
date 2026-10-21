@@ -35,9 +35,12 @@ not know about stamped cards, so those are listed by hand in the collection file
 | Key | Purpose |
 | --- | --- |
 | `name` | Title on the sheets |
+| `masterCollection` | Set to `false` for a list of picked cards rather than a whole Pokémon: drops "master collection" from the titles |
+| `description` | Line under the title on the website (defaults to "Every English <name> card…") |
 | `query` | pokemontcg.io search query, e.g. `nationalPokedexNumbers:179` |
 | `options` | `reverseHolo` / `firstEdition`: set to `false` to leave those printings out. `firstEditionStamp`: where the 1st Edition stamp sits (see below), or `false` |
 | `exclude` | Card ids to skip |
+| `order` | Card ids to print first, in this order (e.g. to keep cards whose art connects on one sheet); the rest follow by release date |
 | `overrides` | Per card id: `category` (`normal`, `promo`, `stamp`), `variants` (`normal`, `holofoil`, `reverseHolofoil`, `unlimited`, `1stEdition`, …), `image`, `note`, `cover`, `prices` (estimated USD value per variant, e.g. `{ "normal": 0.25 }`) |
 | `stamps` | Stamped versions of a card in the results: `{ card, stamp, note?, image?, price? }` |
 | `extras` | Cards missing from the API: `{ set, number, setTotal?, releaseDate?, category?, variant?, note?, price?, image? \| imageFrom? }` |

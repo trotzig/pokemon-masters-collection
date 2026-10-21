@@ -36,6 +36,10 @@ async function markOwned(slots, slug) {
   }
 }
 
+/** Heading for a collection: "<name> master collection" unless the config opts out. */
+export const collectionTitle = (config) =>
+  config.masterCollection === false ? config.name : `${config.name} master collection`;
+
 /** Config + placeholder slots (with `owned` set) for collections/<slug>.json. */
 export async function loadCollection(slug, { refresh = false } = {}) {
   const config = JSON.parse(await readFile(path.join(ROOT, 'collections', `${slug}.json`), 'utf8'));

@@ -1,0 +1,21 @@
+{
+  "name": "Knuts chase cards",
+  "masterCollection": false,
+  "description": "Cards Knut is chasing, including the nine Galarian Gallery cards whose art joins into one picture.",
+  "query": "id:swsh12pt5gg-GG26 OR id:swsh12pt5gg-GG27 OR id:swsh12pt5gg-GG28 OR id:swsh12pt5gg-GG29 OR id:swsh12pt5gg-GG30 OR id:swsh12pt5gg-GG31 OR id:swsh12pt5gg-GG32 OR id:swsh12pt5gg-GG33 OR id:swsh12pt5gg-GG34 OR id:me55-146 OR id:me4-89 OR id:sv2-201 OR id:sv3-209 OR id:sv3pt5-166 OR id:svp-44 OR id:me4-87 OR id:swsh7-192",
+  "options": { "reverseHolo": false, "firstEdition": false },
+  "order": [
+    "swsh12pt5gg-GG26", "swsh12pt5gg-GG27", "swsh12pt5gg-GG28",
+    "swsh12pt5gg-GG29", "swsh12pt5gg-GG30", "swsh12pt5gg-GG31",
+    "swsh12pt5gg-GG32", "swsh12pt5gg-GG33", "swsh12pt5gg-GG34"
+  ],
+  "exclude": [],
+  "overrides": {
+    "svp-44": { "category": "normal" },
+    "me4-87": { "variants": ["holofoil"] },
+    "me4-89": { "variants": ["holofoil"] },
+    "me55-146": { "variants": ["holofoil"] }
+  },
+  "stamps": [],
+  "extras": []
+}

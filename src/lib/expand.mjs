@@ -161,8 +161,13 @@ export function expand(cards, config) {
     }
   }
 
+  // Cards listed in `order` come first, in that order; the rest follow by date.
+  const rank = new Map((config.order ?? []).map((id, i) => [id, i]));
+  const byRank = (slot) => rank.get(slot.cardId) ?? Infinity;
   return slots.sort(
     (a, b) =>
-      CATEGORIES.indexOf(a.category) - CATEGORIES.indexOf(b.category) || compareSlots(a, b),
+      CATEGORIES.indexOf(a.category) - CATEGORIES.indexOf(b.category) ||
+      byRank(a) - byRank(b) ||
+      compareSlots(a, b),
   );
 }

@@ -1,5 +1,6 @@
 // Web pages for sharing collections: one page per collection plus an index.
 // Pictures are loaded straight from the card image CDN, never committed.
+import { collectionTitle } from './collection.mjs';
 import { CATEGORIES } from './expand.mjs';
 import { CATEGORY_TITLES, COLS, COVER_CSS, ROWS, badge, chunk, coverHtml, escapeHtml, numberLabel, year } from './render.mjs';
 
@@ -136,11 +137,11 @@ export function renderCollectionPage({ config, slots }) {
   )}</b> of ${formatPrice(sumPrices(slots))}</span>`;
 
   return page(
-    `${config.name} master collection`,
+    collectionTitle(config),
     `<header>
   <p class="sub"><a href="./">← All collections</a></p>
-  <h1>${escapeHtml(config.name)} master collection</h1>
-  <p class="sub">Every English ${escapeHtml(config.name)} card: normal, promo and stamped versions.</p>
+  <h1>${escapeHtml(collectionTitle(config))}</h1>
+  <p class="sub">${escapeHtml(config.description ?? `Every English ${config.name} card: normal, promo and stamped versions.`)}</p>
   <div class="bar" role="progressbar" aria-valuenow="${owned}" aria-valuemin="0" aria-valuemax="${total}"><span style="width:${percent}%"></span></div>
   <div class="stats"><span><b>${owned}</b> of <b>${total}</b> collected (${percent}%)</span><span><b>${total - owned}</b> still to find</span>${categoryStats}${valueStats}</div>
 </header>

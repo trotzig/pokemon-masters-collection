@@ -98,24 +98,24 @@ function slotHtml(slot) {
 </div>`;
 }
 
-function checklistHtml(title, slots) {
+function checklistHtml(title, name, slots) {
   const groups = CATEGORIES.map((category) => {
     const rows = slots
       .filter((slot) => slot.category === category)
       .map(
         (slot) =>
           `<li${slot.owned ? ' class="owned"' : ''}><span class="box">${slot.owned ? '✓' : ''}</span><span class="what"><b>${escapeHtml(slot.setName)}</b> ${escapeHtml(numberLabel(slot))}${
-            slot.name === title ? '' : ` · ${escapeHtml(slot.name)}`
+            slot.name === name ? '' : ` · ${escapeHtml(slot.name)}`
           }</span><span class="variant">${escapeHtml(badge(slot).text)}</span></li>`,
       );
     const owned = slots.filter((slot) => slot.category === category && slot.owned).length;
     return rows.length ? `<h2>${CATEGORY_TITLES[category]} (${owned}/${rows.length})</h2><ul>${rows.join('')}</ul>` : '';
   });
   const owned = slots.filter((slot) => slot.owned).length;
-  return `<section class="checklist"><h1>${escapeHtml(title)} — master collection checklist (${owned}/${slots.length} owned)</h1>${groups.join('')}</section>`;
+  return `<section class="checklist"><h1>${escapeHtml(title)} — checklist (${owned}/${slots.length} owned)</h1>${groups.join('')}</section>`;
 }
 
-export function renderHtml({ title, slots, paper: paperName }) {
+export function renderHtml({ title, name, slots, paper: paperName }) {
   const paper = PAPERS[paperName];
   const left = (paper.width - COLS * CARD.width) / 2;
   const top = (paper.height - ROWS * CARD.height) / 2;
@@ -125,7 +125,7 @@ export function renderHtml({ title, slots, paper: paperName }) {
     .map((pageSlots, i) => {
       const sections = [...new Set(pageSlots.map((slot) => CATEGORY_TITLES[slot.category]))].join(' + ');
       return `<section class="page">
-<header>${escapeHtml(title)} master collection · ${sections} · ${i + 1}/${pages.length}</header>
+<header>${escapeHtml(title)} · ${sections} · ${i + 1}/${pages.length}</header>
 ${cutMarks(paper, left, top)}
 <div class="grid">${pageSlots.map(slotHtml).join('\n')}</div>
 </section>`;
@@ -136,7 +136,7 @@ ${cutMarks(paper, left, top)}
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>${escapeHtml(title)} master collection placeholders</title>
+<title>${escapeHtml(title)} placeholders</title>
 <style>
 @page { size: ${paper.width}mm ${paper.height}mm; margin: 0; }
 @page checklist { size: ${paper.width}mm ${paper.height}mm; margin: 14mm; }
@@ -177,7 +177,7 @@ ${COVER_CSS}
 </head>
 <body>
 ${pagesHtml}
-${checklistHtml(title, slots)}
+${checklistHtml(title, name, slots)}
 </body>
 </html>
 `;
