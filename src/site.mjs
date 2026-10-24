@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // Usage: node src/site.mjs [--refresh] [--out <dir>]
-// Builds the shareable website (default: output/site) for all collections.
-import { mkdir, writeFile } from 'node:fs/promises';
+// Builds the shareable website (default: output/site) for all collections
+// except those with `"site": false`.
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { parseArgs } from 'node:util';
 import { ROOT } from './lib/api.mjs';
@@ -20,6 +21,8 @@ await mkdir(outDir, { recursive: true });
 
 const collections = [];
 for (const slug of await listCollections()) {
+  const config = JSON.parse(await readFile(path.join(ROOT, 'collections', `${slug}.json`), 'utf8'));
+  if (config.site === false) continue;
   const collection = { slug, ...(await loadCollection(slug, { refresh: flags.refresh })) };
   collections.push(collection);
   await writeFile(path.join(outDir, `${slug}.html`), renderCollectionPage(collection));

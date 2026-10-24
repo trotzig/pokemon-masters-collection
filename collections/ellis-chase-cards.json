@@ -1,0 +1,17 @@
+{
+  "name": "Ellis's chase cards",
+  "masterCollection": false,
+  "site": false,
+  "description": "Cards Ellis is chasing, including Yuka Morii's clay art and Crocalor and Skeledirge out shopping.",
+  "query": "id:swsh12pt5gg-GG49 OR id:sv2-202 OR id:sv2-258 OR id:me5-117 OR id:sv6-56 OR id:me55-141 OR id:me4-116",
+  "options": { "reverseHolo": false, "firstEdition": false },
+  "order": ["swsh12pt5gg-GG49", "sv2-202", "sv2-258", "me5-117", "sv6-56", "me55-141", "me4-116"],
+  "exclude": [],
+  "overrides": {
+    "me5-117": { "variants": ["holofoil"], "prices": { "holofoil": 64.35 } },
+    "me55-141": { "variants": ["holofoil"], "prices": { "holofoil": 5.0 } },
+    "me4-116": { "variants": ["holofoil"], "prices": { "holofoil": 156.57 } }
+  },
+  "stamps": [],
+  "extras": []
+}

@@ -37,6 +37,7 @@ not know about stamped cards, so those are listed by hand in the collection file
 | `name` | Title on the sheets |
 | `masterCollection` | Set to `false` for a list of picked cards rather than a whole Pokémon: drops "master collection" from the titles |
 | `description` | Line under the title on the website (defaults to "Every English <name> card…") |
+| `site` | Set to `false` to leave the collection off the website (sheets can still be built) |
 | `query` | pokemontcg.io search query, e.g. `nationalPokedexNumbers:179` |
 | `options` | `reverseHolo` / `firstEdition`: set to `false` to leave those printings out. `firstEditionStamp`: where the 1st Edition stamp sits (see below), or `false` |
 | `exclude` | Card ids to skip |
